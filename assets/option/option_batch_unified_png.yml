@@ -1,0 +1,37 @@
+# 批量下载到统一文件夹，按本子标题分类，全部转 PNG
+# 使用方法：
+#   from jmcomic import create_option_by_file, download_album
+#   option = create_option_by_file('assets/option/option_batch_unified_png.yml')
+#   download_album([123456, 234567], option)
+
+log: true
+
+client:
+  impl: html
+  retry_times: 5
+  postman:
+    meta_data:
+      proxies: system
+
+download:
+  cache: true
+  image:
+    decode: true
+    suffix: .png          # 全部转成 PNG
+  threading:
+    image: 20
+    photo: 8
+
+dir_rule:
+  base_dir: ./JMComic/    # 统一根目录（相对路径，自己改成绝对路径也行，比如 D:/JMComic/ 或 /home/user/JMComic/）
+  rule: Bd / Atitle       # 按本子标题建文件夹
+  # 更细的分类示例（可选）：
+  # rule: Bd / Aauthor / Atitle
+  # rule: Bd / Aid-Atitle
+  normalize_zh: zh-cn     # 简体规范化（需要 pip install zhconv，不安装也不影响）
+
+plugins:
+  after_init:
+    - plugin: download_progress
+      kwargs:
+        terminal_log_lines: 6
