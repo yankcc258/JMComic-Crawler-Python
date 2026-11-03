@@ -1,6 +1,6 @@
 """
 JMComic 本地网页版下载器（Gradio）
-支持：直接下载、搜索下载、排行榜（周/月/总）+ 封面预览
+支持：直接下载、搜索下载（带封面预览）、排行榜（周/月/总 + 封面预览）
 """
 
 import re
@@ -40,10 +40,9 @@ def download_by_ids(ids_text: str, progress=gr.Progress()) -> str:
     except Exception as e:
         return f"下载出错：{e}"
 
-# ==================== 搜索 ====================
 def do_search(query: str, page: int):
     if not query or not query.strip():
-        return gr.update(choices=[], value=[]), "请输入关键词"
+        return gr.update(choices=[], value=[]), "请输入关键词", "<div style='color:#888;text-align:center;padding:40px;'>搜索后勾选查看封面</div>"
     try:
         client = get_option().new_jm_client()
         try:
@@ -52,11 +51,11 @@ def do_search(query: str, page: int):
             result = client.search_site(search_query=query.strip(), page=int(page))
         items = [(str(aid), str(title)) for aid, title in result.iter_id_title()]
         if not items:
-            return gr.update(choices=[], value=[]), "没有搜到结果"
+            return gr.update(choices=[], value=[]), "没有搜到结果", ""
         choices = [f"{aid} | {title}" for aid, title in items]
-        return gr.update(choices=choices, value=[]), f"第 {page} 页，找到 {len(items)} 个"
+        return gr.update(choices=choices, value=[]), f"第 {page} 页，找到 {len(items)} 个", "<div style='color:#888;text-align:center;padding:40px;'>勾选一个查看封面</div>"
     except Exception as e:
-        return gr.update(choices=[], value=[]), f"搜索出错：{e}"
+        return gr.update(choices=[], value=[]), f"搜索出错：{e}", ""
 
 def download_checked(selected: list[str], progress=gr.Progress()) -> str:
     if not selected:
@@ -66,7 +65,6 @@ def download_checked(selected: list[str], progress=gr.Progress()) -> str:
         return "没有有效 ID"
     return download_by_ids("\n".join(ids), progress)
 
-# ==================== 排行榜 ====================
 def load_ranking(mode: str, page: int):
     try:
         client = get_option().new_jm_client()
@@ -110,7 +108,6 @@ def show_cover(selected: list[str]):
     </div>
     '''
 
-# ==================== 界面 ====================
 with gr.Blocks(title="JMComic 下载器") as demo:
     gr.Markdown("# JMComic 本地下载器\n直接下载 · 搜索 · 排行榜")
 
@@ -126,10 +123,13 @@ with gr.Blocks(title="JMComic 下载器") as demo:
             p_box = gr.Number(label="页码", value=1, minimum=1, precision=0, scale=1)
             s_btn = gr.Button("搜索", variant="primary")
         s_status = gr.Textbox(label="状态", interactive=False)
-        s_list = gr.CheckboxGroup(label="结果（勾选后下载）", choices=[])
+        with gr.Row():
+            s_list = gr.CheckboxGroup(label="结果（勾选查看封面 / 下载）", choices=[], scale=3)
+            s_cover = gr.HTML("<div style='color:#888;text-align:center;padding:40px;'>搜索后勾选查看封面</div>", scale=2)
         s_dl = gr.Button("下载选中", variant="primary")
         s_out = gr.Textbox(label="下载结果", lines=4)
-        s_btn.click(do_search, inputs=[q_box, p_box], outputs=[s_list, s_status])
+        s_btn.click(do_search, inputs=[q_box, p_box], outputs=[s_list, s_status, s_cover])
+        s_list.change(show_cover, inputs=s_list, outputs=s_cover)
         s_dl.click(download_checked, inputs=s_list, outputs=s_out)
 
     with gr.Tab("排行榜"):
@@ -150,6 +150,7 @@ with gr.Blocks(title="JMComic 下载器") as demo:
     gr.Markdown("""
     ---
     - 下载使用 `assets/option/option_batch_unified_png.yml`（统一文件夹 + PNG）
+    - 搜索和排行榜都支持封面预览（勾选即可查看）
     - 排行榜：week=周榜，month=月榜，all=总榜（按观看数）
     """)
 
