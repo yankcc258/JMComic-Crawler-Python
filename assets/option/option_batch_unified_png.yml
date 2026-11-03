@@ -7,7 +7,7 @@
 log: true
 
 client:
-  impl: html
+  impl: api          # 改用移动端接口，对日本 IP 更友好
   retry_times: 5
   postman:
     meta_data:
