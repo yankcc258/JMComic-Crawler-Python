@@ -108,7 +108,7 @@ def download_selected(selected: list[str], progress=gr.Progress()) -> str:
     return download_by_ids("\n".join(ids), progress)
 
 # ==================== Gradio 界面 ====================
-with gr.Blocks(title="JMComic 下载器", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="JMComic 下载器") as demo:
     gr.Markdown("# JMComic 本地下载器\n支持直接输入 JM 号，或按 tag/关键词搜索后下载")
     
     with gr.Tab("直接下载"):
@@ -152,4 +152,9 @@ with gr.Blocks(title="JMComic 下载器", theme=gr.themes.Soft()) as demo:
     """)
 
 if __name__ == "__main__":
-    demo.launch(server_name="127.0.0.1", server_port=7860, share=False)
+    demo.launch(
+        server_name="127.0.0.1",
+        server_port=7860,
+        share=False,
+        theme=gr.themes.Soft()
+    )
